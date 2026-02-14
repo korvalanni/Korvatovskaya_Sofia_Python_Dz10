@@ -1,0 +1,40 @@
+name: Python Security and Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety pytest requests-mock requests
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run Static Analysis (Bandit)
+      run: |
+        bandit -r . -ll
+
+    - name: Check Dependencies (Safety)
+      run: |
+        safety check || echo "Safety check found issues or service unavailable"
+
+    - name: Run Tests with pytest
+      run: |
+        pytest test_exploit.py
